@@ -1,0 +1,43 @@
+version: "2"
+services:
+  mongo:
+    container_name: mongo
+    image: mongo:3.7.9
+    volumes:
+      - ./mongo-db:/data/db
+      - ./mongo-config:/data/configdb
+  elasticsearch:
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.8.5
+    environment:
+      ES_JAVA_OPTS: -Xms6G -Xmx6G
+    volumes:
+      - ./es-data:/usr/share/elasticsearch/data
+      - ./es-plugins:/usr/share/elasticsearch/plugins
+  redis:
+    container_name: redis
+    image: redis:3-alpine
+    volumes:
+      - ./redis-data:/data
+  growi:
+    container_name: growi
+    image: weseek/growi:3.5.22
+    ports:
+      - 127.0.0.1:3000:3000/tcp
+    depends_on:
+      - mongo
+      - redis
+      - elasticsearch
+    environment:
+      APP_SITE_URL: http://localhost:3000
+      ELASTICSEARCH_URI: http://elasticsearch:9200/growi
+      FILE_UPLOAD: local
+      MATHJAX: "1"
+      MONGO_URI: mongodb://mongo:27017/growi
+      REDIS_URL: redis://redis:6379/growi
+    volumes:
+      - ./data:/data
+    links:
+      - mongo:mongo
+      - redis:redis
+      - elasticsearch:elasticsearch
